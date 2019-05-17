@@ -8,7 +8,7 @@ env:
 notifications:
   email:
     recipients:
-      - wade@bindshell.net
+      - redmeat@sanguine.org.au
     on_success: always
     on_failure: always
 addons:
