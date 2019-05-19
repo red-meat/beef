@@ -113,7 +113,50 @@ install_linux () {
     apk update # Updates repo, dependencies, etc.
     apk add curl git build-base openssl readline-dev zlib zlib-dev libressl-dev yaml-dev sqlite-dev sqlite libxml2-dev libxslt-dev autoconf libc6-compat ncurses5 automake libtool bison nodejs  # Installs dependencies
   fi
+  
+  #As part of Linux install create systemd service
+  info "${Distro} utilizes systemd to manage services."
+  
+  create_systemd_service
 }
+
+create_systemd_service () {
+  
+  info "Attempting creation of systemd service \"beef.service\"."
+  info "Checking for existing service."
+  
+  systemd_path="/etc/systemd/system/beef.service"
+  if test -f "$systemd_path"; then
+    warn "$systemd_path already exists." 
+    warn "Skipping service installation."
+  else
+    info "Creating systemd file $systemd_path"
+    cwd=$(pwd)  
+    echo "[Unit]
+      Description=The Browser Exploitation Framework
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=root
+      ExecStart=$cwd/beef
+      WorkingDirectory=$cwd
+
+      [Install]
+      WantedBy=multi-user.target " >> $systemd_path
+
+    sudo chmod 664  $systemd_path
+    #reload systemd
+    systemctl daemon-reload
+    #make beef service persistant
+    sudo systemctl enable beef.service
+    
+    info "BeEF service successfully configured." 
+    info "Please change the default password in config.yaml"
+    info "To start service: \"systemctl start beef.service\""
+  fi        
+}
+
 
 install_openbsd () {
 
@@ -151,7 +194,6 @@ install_mac () {
   done
 }
 
-
 check_ruby_version () {
 
   info 'Detecting Ruby environment...'
@@ -171,6 +213,7 @@ check_ruby_version () {
 }
 
 check_rubygems () {
+  
   if command_exists gem${RUBYSUFFIX}
   then
     info 'Updating rubygems...'
@@ -190,7 +233,6 @@ check_bundler () {
     gem${RUBYSUFFIX} install bundler
   fi
 }
-
 
 install_beef () { 
 
@@ -252,3 +294,4 @@ main () {
 }
 
 main "$@"
+
