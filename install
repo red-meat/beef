@@ -130,6 +130,11 @@ create_systemd_service () {
     warn "$systemd_path already exists." 
     warn "Skipping service installation."
   else
+    info "Creating service account for beef"
+    #Create beef user, no shell, locked.
+    sudo useradd -M beef -s /bin/false
+    sudo usermod -L beef
+   
     info "Creating systemd file $systemd_path"
     cwd=$(pwd)  
     echo "[Unit]
@@ -138,7 +143,7 @@ create_systemd_service () {
 
       [Service]
       Type=simple
-      User=root
+      User=beef
       ExecStart=$cwd/beef
       WorkingDirectory=$cwd
 
@@ -147,13 +152,12 @@ create_systemd_service () {
 
     sudo chmod 664  $systemd_path
     #reload systemd
-    systemctl daemon-reload
+    sudo systemctl daemon-reload
     #make beef service persistant
     sudo systemctl enable beef.service
-    
+    sudo systemctl start beef.service
     info "BeEF service successfully configured." 
-    info "Please change the default password in config.yaml"
-    info "To start service: \"systemctl start beef.service\""
+    
   fi        
 }
 
